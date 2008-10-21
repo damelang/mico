@@ -1,0 +1,55 @@
+TODO
+---
+
+- fix "copy" inheritance problem (see dom/events.js) by using
+  true JS inheritance for the Node clone family? This might also
+  fix the fragile ordering of loaded files/packages
+- get gezira rendering going again. Need to hook into
+  dom.graphics.update() to repaint
+- create google group?
+- notify env.js group?
+- test with some more code
+- make all gezira parents (groups, too?) point to a default
+  gezira (blank) object upon creation? This "null" node could be
+  used in several places
+- Fix getTransformToElement
+- SVG ellipse is not elliptic enough at large sizes. The
+  radius should be factored into the bezier calculation
+  (which is trivial to so)
+- I should look at the "fill-opacity" attribute to grab
+  alpha of fill color.
+- need to rewrite setAttributeNS to reuse the attr node, not
+  create a whole new one each time
+- rename geziraBegin/geziraEnd to _gezira.begin/_gezira.end?
+- get to run again on the n800
+- ideally I'd have a object mapping to and from dom and gezira objects.
+  This would get rid of the domObject.gezira hack, and allow for the
+  hit testing to work. Expose a hash table object? Or a special purpose
+  function?
+- Fix memory leaks of gezira objects. Must install a finalizer gezira
+  JS objects.
+- expose a window.height window.width getters (and setters?)
+- an element may be added to the dom render queue multiple times because
+  multiple attributes of that element are changed in a given phase. Should
+  we do a uniq() on that queue then? How much of a win does this get
+  me? Can either == or === get me a fast object id-like comparison?
+- write glue code for other JS engines, window/events libraries and
+  graphics renderers
+    - v8
+    - squirrelfish
+    - rhino
+- plug in an (X)HTML parser (see OMeta/JS)
+- To make our (X)HTML output the same as FF, we need to:
+    - support doctype
+    - the script tags, plus the "1" child text node in each
+    - don't emit </endtags> for elements that don't (can't?) have
+      children (e.g., <stop />)
+    - don't emit implied args for transforms (e.g., translate(0 0))
+    - don't output default implied values (or keep track if they have been
+      changed (specified))
+    - no newlines for text nodes
+    - spaces/commas for lists
+    - same order of the attributes
+- network functionality. Bindings to libcurl (or something like it)
+- CSS
+

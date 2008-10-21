@@ -1,0 +1,77 @@
+LESSONS LEARNED
+---
+
+- command for making (spider|trace)monkey:
+
+	export BUILD_OPT=1 && export JS_DIST=.. && make -f Makefile.ref all export
+
+- command for cleaning (spider|trace)monkey:
+
+	export BUILD_OPT=1 && make -f Makefile.ref clean clobber
+
+  (but you still have to manually delete the editline build directory!)
+
+- to get embedded tracemonkey to work, I had to manually
+  copy jsutil.h from the src/ to include/ directory
+
+- (DOM) where should the actual _value reside? In the element,
+  or in the attr?
+    - A: in the attr. Because attr can be created outside
+      without any ownerElement, but must store a _value.
+      (FF stores a value in both places and keeps them syncronized)
+      My way means that when an attribute node is replaced
+      (or even its value is set using the attr API), the
+      _value is regenerated, meaning that held references
+      to the old one are now bad. I can live with that.
+- (DOM) where should the parsing logic reside?
+    - A: in the element. Attr can be created independent
+      of an ownerElement. If/when attached to an element,
+      the element can then parse the _value and convert
+      it to a more specific datatype.
+      When attr have ownerElements, it should use the element's
+      parser for setting the _value.
+- (DOM) what about attributes
+    - with no accessors?
+        - handled (I don't know of any that LK uses)
+    - with accessors?
+        - handled
+    - with read-only accessors?
+        - handled
+    - that are #IMPLIED?
+        - use the defaultValue in the attributeSpec
+    - that are of string type?
+        - no parser needed
+    - that are of float type?
+        - parser in attributeSpec is parseFloat()
+    - that are of int type?
+        - parser is parseInt()
+    - that are of complex type? (e.g., SVGAnimatedLength)
+        - parser is SVGAnimatedLength.fromString
+- (DOM) What about tagName for (HTML) elements? Should they be a
+  prototype method for known elements? That way we don't have
+  _tagName defined individually for each element?
+  Only define it (when elements are created) if the element doesn't
+  already have it defined (via the prototype)
+  No, we can't do this. This is becase the tagName may contain
+  a prefix, of which the corresponding Element prototype is
+  unaware.
+- we must keep local references for parentNode and ownerElement.
+  This is because nodes that belong to a document aren't necessarily
+  reachable from the documentElement.
+- what about valueAsString? Does that mean that we aren't
+  expected to take a string as a setter value for value()?
+    - A: No, it's that valueAsString requires that we parse the
+      unit out of the string
+- why is translate(0) for textselectionmorph showing up
+  as an unknown transform?
+    - A: I don't think that it is unknown, I think that they just called
+      consolidate and we turned a single translation into a matrix transform.
+      I just have to make consolidate not do anything if there is only one
+      transform.
+- changing a DOM element's gezira fragment will mess up the parent's gezira
+  fragment's reference to the child's fragment
+    - A: I won't have to update the parent's child/children references as long
+      as the child doesn't change his top (or "geziraBegin") gezira object.
+- we can't use the built-in JS inheritance very much at all because we
+  need multiple inheritance to support the DOM specs. This is why we use
+  the "fake" copy inheritance of mico.extend

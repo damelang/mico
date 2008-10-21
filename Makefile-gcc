@@ -1,0 +1,17 @@
+include config-gcc.mk
+
+default: system/mico-$(ENGINE)
+	@for p in $(PACKAGES_TO_COMPILE); do \
+		$(MAKE) -C $$p -f Makefile-gcc $(ENGINE)$(COMPILED_PACKAGE_EXT); \
+	done
+
+system/mico-$(ENGINE): .FORCE
+	$(MAKE) -C system -f Makefile-gcc mico-$(ENGINE)
+
+clean:
+	$(MAKE) -C system -f Makefile-gcc clean
+	@for p in $(PACKAGES_TO_COMPILE); do \
+		$(MAKE) -C $$p -f Makefile-gcc clean; \
+	done
+
+.FORCE:

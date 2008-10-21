@@ -1,0 +1,28 @@
+Mico is an experimental Javascript programming environment. It provides
+structure and functionality on top the Javascript engine of your choice.
+To this aim, Mico strives to use Javascript code instead of native,
+engine-specific code wherever possible.
+
+Mico currently provides a fairly complete DOM Level 2 Core implementation
+written in pure Javascript, with very limited Level 2 HTML and SVG support.
+It also provides incomplete Javascript bindings to SDL and a pure Javascript
+bare-bones implementation of the web browser "window" object. Rendering of
+DOM nodes happens via an AOP-inspired bridge between DOM elements and the
+underlying graphics library of your choice.
+
+Mico introduces a "system" object for interfacing with the underlying
+Javascript engine. This object allows for loading script files
+(via system.load()) and compiled bindings to C libraries
+(via system.dlload()).
+
+Scripts in Mico can declare dependencies on other "packages." At runtime,
+these dependencies are resolved automatically through a simple package
+location mechanism.
+
+As of this writing, Mico has been used for very little, mostly as a testbed for
+novel web browser implementations.
+
+Initial development of Mico was funded by Viewpoints Research Institute,
+NSF Grant No. 0639876 and Sun Microsystems.
+
+- Dan Amelang (dan@amelang.net)

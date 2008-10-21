@@ -1,0 +1,7 @@
+include ../config-gcc.mk
+
+mico-spidermonkey: spidermonkey.c $(MAKEFILE_LIST)
+	g++ $< $(CFLAGS) -rdynamic -Wl,-Bstatic -ljs -Wl,-Bdynamic -ldl -lm -o $@ 
+
+clean:
+	/bin/rm -f mico-spidermonkey
