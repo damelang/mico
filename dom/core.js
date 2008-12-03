@@ -500,7 +500,6 @@ mico.extend(dom.Document.prototype, {
   createDocumentFragment: function() { mico.TODO(); },
 
   createTextNode: function(data) {
-    // FIXME this is a temporary work around for the LK naming clash...
     var text = new dom.Text;
     text._ownerDocument = this;
     text.data = data;
