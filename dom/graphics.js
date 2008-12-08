@@ -16,7 +16,7 @@ dom.graphics = {
   },
 
   update: function() {
-    // TODO get rid of multiple occurances of elements in queue?
+    // TODO get rid of multiple occurances of the same element in queue?
     while (this.queue.length)
       this.render(this.queue.pop());
   }
