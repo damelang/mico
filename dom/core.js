@@ -160,6 +160,7 @@ mico.extend(dom.Node.prototype, {
     this.removeChild(newChild);
     newChild._parentNode = this;
     this.childNodes._nodes.push(newChild);
+    return newChild;
   },
 
   hasChildNodes: function() { return this.childNodes.length > 0; },
