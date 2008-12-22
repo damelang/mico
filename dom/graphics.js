@@ -23,8 +23,8 @@ dom.graphics = {
 };
 
 mico.around(dom.Attr.prototype, 'value=',
-function(func, args) {
-  func.apply(this, args);
+function(proceed, args) {
+  proceed.apply(this, args);
   if (this.ownerElement && this.ownerElement._graphics)
     dom.graphics.queue.push(this.ownerElement);
 });
@@ -32,17 +32,17 @@ function(func, args) {
 // FIXME I'm uneasy about depending on DOM implementation-specific details here
 mico.around(dom.Element.prototype,
 ['removeChild', 'removeAttributeNode', 'removeAttributeNS'],
-function(func, args) {
+function(proceed, args) {
   if (this._graphics)
     dom.graphics.queue.push(this);
-  return func.apply(this, args);
+  return proceed.apply(this, args);
 });
 
 mico.around(dom.Element.prototype, ['deepClone', 'cloneNode'],
-function(func, args) {
+function(proceed, args) {
   var _graphics = this._graphics;
   delete this._graphics;
-  var clone = func.apply(this, args);
+  var clone = proceed.apply(this, args);
   _graphics && (this._graphics = _graphics);
   return clone;
 });
