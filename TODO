@@ -1,29 +1,34 @@
 TODO
 ---
 
-- fix "copy" inheritance problem (see dom/events.js) by using
-  true JS inheritance for the Node clone family? This might also
-  fix the fragile ordering of loaded files/packages
-- get gezira rendering going again. Need to hook into
-  dom.graphics.update() to repaint
-- create google group?
-- notify env.js group?
-- test with some more code
-- make all gezira parents (groups, too?) point to a default
-  gezira (blank) object upon creation? This "null" node could be
-  used in several places
-- Fix getTransformToElement
+- fix glyph server hack
+- fix window title hack
+- get cloning to work
+    - positioning is wrong
+- get rotation to work (alt click)
+    - rotates wildly, some calculation is wrong
+
+- get to run again on the n800
 - SVG ellipse is not elliptic enough at large sizes. The
   radius should be factored into the bezier calculation
   (which is trivial to so)
-- I should look at the "fill-opacity" attribute to grab
-  alpha of fill color.
+- change gezira real streams contructors to take varargs instead of an array
+- create getters for gezira streams attributes (e.g., rotation.angle)
+- make shift key work (for events), and change the shift state from
+  a parameter to a function call on the sdl object
+- Fix getTransformToElement
 - need to rewrite setAttributeNS to reuse the attr node, not
   create a whole new one each time
-- rename geziraBegin/geziraEnd to _gezira.begin/_gezira.end?
-- get to run again on the n800
+- I should look at the "fill-opacity" attribute to grab
+  alpha of fill color.
+- fix "copy" inheritance problem (see dom/events.js) by using
+  true JS inheritance just for the Node clone family? This might also
+  fix the fragile ordering of loaded files/packages
+- make all gezira parents (groups, too?) point to a default
+  gezira (blank) object upon creation? This "null" node could be
+  used in several places (instead of just a gezira.Node with no children)
 - ideally I'd have a object mapping to and from dom and gezira objects.
-  This would get rid of the domObject.gezira hack, and allow for the
+  This would get rid of the domObject._graphics stuff, and allow for the
   hit testing to work. Expose a hash table object? Or a special purpose
   function?
 - Fix memory leaks of gezira objects. Must install a finalizer gezira
@@ -36,7 +41,7 @@ TODO
 - write glue code for other JS engines, window/events libraries and
   graphics renderers
     - v8
-    - squirrelfish
+    - nitro
     - rhino
 - plug in an (X)HTML parser (see OMeta/JS)
 - To make our (X)HTML output the same as FF, we need to:
@@ -52,4 +57,3 @@ TODO
     - same order of the attributes
 - network functionality. Bindings to libcurl (or something like it)
 - CSS
-
