@@ -1,0 +1,191 @@
+#!/usr/bin/env ruby
+# This file is part of the Mico project, available under the MIT license:
+#
+#      http://www.opensource.org/licenses/mit-license.php
+#
+
+class String
+  def camelize
+    to_s.gsub(/\/(.?)/) { "::#{$1.upcase}" }.
+         gsub(/(?:^|_)(.)/) { $1.upcase }
+  end
+end
+
+module Gezira; end
+
+class Gezira::StreamClass
+  attr_reader :js_name
+
+  def initialize(name, attributes)
+    @name = name
+    @attributes = attributes
+    @qualified_name = 'gezira_' + name
+    @js_name = name.camelize
+  end
+
+  def generate_binding
+    generate_constructor
+    generate_setter_function
+    generate_js_class
+    generate_property_specs
+    generate_functions
+  end
+
+  def generate_constructor
+    puts <<-END
+static JSBool
+#{@js_name}_constructor (JSContext *cxt, JSObject *obj, uintN argc,
+                               jsval *argv, jsval *rval)
+{
+    double d;
+    #{@qualified_name} *stream =
+        (#{@qualified_name} *) malloc (sizeof (#{@qualified_name}));
+    stream->type = #{@qualified_name}_type;
+    stream->n = 0;
+    stream->elements = 0;
+    JS_SetPrivate (cxt, obj, stream);
+    END
+
+    generate_constructor_body
+
+    puts <<-END
+    *rval = OBJECT_TO_JSVAL (obj);
+    return JS_TRUE;
+}
+    END
+  end
+
+  def generate_setter_function
+    return if @attributes.empty?
+
+    puts <<-END
+static JSBool
+#{@js_name}_setter (JSContext *cxt, JSObject *obj,
+                            jsval id, jsval *vp)
+{
+    double d;
+    #{@qualified_name} *stream =
+        (#{@qualified_name} *) JS_GetPrivate (cxt, obj);
+    JS_ValueToNumber (cxt, *vp, &d);
+    switch (JSVAL_TO_INT (id)) {
+    END
+
+    @attributes.each_with_index do |a, i|
+      puts "case #{i}: stream->#{a} = GEZIRA_REAL (d); break;"
+    end
+
+    puts <<-END
+    }
+    return JS_TRUE;
+}
+    END
+  end
+
+  def generate_js_class
+    puts <<-END
+static JSClass #{@js_name}_class = {
+    "#{@js_name}", JSCLASS_HAS_PRIVATE,
+    JS_PropertyStub,  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+    JS_EnumerateStub, JS_ResolveStub,  JS_ConvertStub,  JS_FinalizeStub,
+    JSCLASS_NO_OPTIONAL_MEMBERS
+};
+    END
+  end
+
+  def generate_property_specs
+    puts "static JSPropertySpec #{@js_name}_property_specs[] = {"
+    @attributes.each_with_index do |a, i|
+      puts "{\"#{a}\", #{i}, 0, NULL, #{@js_name}_setter},"
+    end
+    puts "{0, 0, 0, 0, 0}};"
+  end
+
+  def generate_functions
+    puts <<-END
+static JSFunctionSpec #{@js_name}_functions[] = {
+    {NULL, NULL, 0, 0, 0}
+};
+    END
+  end
+end
+
+class Gezira::NodeClass < Gezira::StreamClass
+  def generate_constructor_body
+    @attributes.each_with_index do |a, i|
+      puts <<-END
+    JS_ValueToNumber (cxt, argv[#{i}], &d);
+    stream->#{a} = GEZIRA_REAL (d);
+      END
+    end
+  end
+
+  def generate_functions
+    puts <<-END
+static JSFunctionSpec #{@js_name}_functions[] = {
+    {"children", Node_set_children, 0, 0, 0},
+    {NULL, NULL, 0, 0, 0}
+};
+    END
+  end
+  def constructor_argc; @attributes.size end
+end
+
+class Gezira::RealStreamClass < Gezira::StreamClass
+  def constructor_argc; 1 end
+  def generate_constructor_body
+    puts "create_real_elements (cxt, argv[0], &stream->elements, &stream->n);"
+  end
+end
+
+print File::read('spidermonkey.head.c')
+
+CLASS_DECLS = [
+  [Gezira::RealStreamClass, 'line_stream'],
+  [Gezira::RealStreamClass, 'bezier3_stream'],
+  [Gezira::NodeClass,       'node'],
+  [Gezira::NodeClass,       'paint_node'],
+  [Gezira::NodeClass,       'color_over_node',
+    'a', 'r', 'g', 'b'],
+  [Gezira::NodeClass,       'clip_node',
+    'xmin', 'ymin', 'xmax', 'ymax'],
+  [Gezira::NodeClass,       'color_background_node',
+    'r', 'g', 'b'],
+  [Gezira::NodeClass,       'transformation_node',
+    'a', 'b', 'c', 'd', 'e', 'f'],
+  [Gezira::NodeClass,       'translation_node',
+    'x', 'y'],
+  [Gezira::NodeClass,       'rotation_node',
+    'angle'],
+  [Gezira::NodeClass,       'scale_node',
+    'x', 'y']
+]
+
+classes = CLASS_DECLS.map do |c|
+  c[0].new(c[1], c[2..-1])
+end
+
+classes.each do |c| c.generate_binding end
+
+# TODO must keep argc in sync! Major bug warning!
+classes << Struct.new(:js_name, :constructor_argc).new('Renderer', 5)
+
+puts <<-END
+void
+initialize (JSContext *cxt)
+{
+    JSObject *gezira;
+
+    gezira = JS_DefineObject (cxt, JS_GetGlobalObject (cxt),
+                              "gezira", NULL, NULL, 0);
+END
+
+classes.each do |c|
+  puts <<-END
+    JS_InitClass (cxt, gezira, NULL, &#{c.js_name}_class,
+                  #{c.js_name}_constructor, #{c.constructor_argc},
+                  #{c.js_name}_property_specs, #{c.js_name}_functions,
+                  NULL, NULL);
+  END
+end
+
+puts "\n}"
