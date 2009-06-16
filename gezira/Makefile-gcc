@@ -1,7 +1,10 @@
 include ../config-gcc.mk
 
-spidermonkey$(COMPILED_PACKAGE_EXT): spidermonkey.c $(MAKEFILE_LIST)
-	gcc $< $(CFLAGS) -shared -lgezira-pixmap -lgezira -o $@ 
+spidermonkey$(COMPILED_PACKAGE_EXT): spidermonkey.generated.c $(MAKEFILE_LIST)
+	gcc $< $(CFLAGS) -shared -lgezira -o $@ 
+
+spidermonkey.generated.c: generate-bindings spidermonkey.head.c
+	./generate-bindings > $@
 
 clean:
-	/bin/rm -f *$(COMPILED_PACKAGE_EXT)
+	/bin/rm -f *$(COMPILED_PACKAGE_EXT) spidermonkey.generated.c
