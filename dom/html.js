@@ -71,10 +71,34 @@ dom.Element.defineAttributes(dom.HTMLElement, 'id', 'title', 'lang', 'dir',
   {name:'className', xmlName:'class'});
 
 // TODO should define tagName for each (using defineElement)
-['sub', 'sup', 'span', 'bdo', 'tt', 'i', 'b', 'u', 's', 'strike', 'big',
+['sub', 'sup', 'bdo', 'tt', 'i', 'b', 'u', 's', 'strike', 'big',
  'small', 'em', 'strong', 'dfn', 'code', 'samp', 'kbd', 'var', 'cite',
  'acronym', 'abbr', 'dd', 'dt', 'noframes', 'noscript', 'address', 'center'].
  forEach(function(name) { dom.HTMLElement.factory[name] = dom.HTMLElement; });
+
+dom.HTMLSpanElement = dom.HTMLElement.defineElement('span');
+/* FIXME many ugly hacks here */
+mico.extend(dom.HTMLSpanElement.prototype, {
+    _metrics: function(text) {
+      if (!gezira)
+        return [10, 10];
+      var sumx = 0;
+      var sumy = 0;
+      for (var i = 0; i < text.length; i++) {
+        var metrics = gezira._glyphserver.metrics(text[i]);
+        sumx += metrics[0];
+        sumy += metrics[1];
+      }
+      return [sumx, sumy];
+    },
+
+    get offsetWidth() {
+      return this._metrics(this.firstChild.data)[0];
+    },
+    get offsetHeight() {
+      return this._metrics(this.firstChild.data)[1];
+    }
+});
 
 dom.HTMLHtmlElement = dom.HTMLElement.defineElement('html', 'version');
 dom.HTMLHeadElement = dom.HTMLElement.defineElement('head', 'profile');
