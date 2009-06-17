@@ -87,8 +87,10 @@ system_dlload (JSContext *context, JSObject *object,
                                              strlen (COMPILED_PACKAGE_EXT) + 1);
         sprintf (filename_with_ext, "%s%s", filename, COMPILED_PACKAGE_EXT);
 
+        /* TODO don't even try if file doesn't exist */
         library = dlopen (filename_with_ext, RTLD_LAZY | RTLD_GLOBAL);
         if (!library) {
+            //printf ("dlopen error: %s\n", dlerror ());
             free (filename_with_ext);
             *rval = JSVAL_NULL;
             return JS_TRUE;

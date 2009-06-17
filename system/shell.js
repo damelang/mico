@@ -15,5 +15,10 @@ var system = {
 
   dlload: function(filename) {},
 
-  load: function(filename) { load(filename); }
+  load: function() {
+    Array.prototype.forEach.call(arguments, function (filename) {
+      load(filename);
+    });
+    return true;
+  }
 };
