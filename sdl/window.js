@@ -2,7 +2,9 @@ mico.require('sdl');
 mico.require('dom.graphics');
 mico.require('dom.events');
 
-var window = {
+var window = this;
+
+mico.extend(window, {
   parent: window,
   alert: system.print,
   console: {log: system.print},
@@ -20,42 +22,53 @@ var window = {
   },
 
   dispatchEvent: function(event) {
-    document && document.documentElement.dispatchEvent(event);
+    window.document && window.document.documentElement.dispatchEvent(event);
+    window.refresh();
+  },
+
+  refresh: function() {
     dom.graphics.update();
+    /* FIXME ugly hack */
+    if (window._graphics)
+      window._graphics.render(window.document._graphics);
+    sdl.videoSurface.update();
   }
-};
+});
 
 sdl.ontimer = function(i) {
   var timer = window._timers[i];
   if (timer) {
     window._timers[i] = null;
-    timer.action.apply(this);
-    dom.graphics.update();
+    timer.action.apply(window);
+    window.refresh();
   }
 };
 
-sdl.onmousemove = function(x, y, shift) {
+sdl.onmousemove = function(x, y) {
   var event = new dom.MouseEvent;
   event._type = 'mousemove';
-  event._shiftKey = shift;
+  event._shiftKey = sdl.shiftKeyDown ();
+  event._altKey = sdl.altKeyDown ();
   event._clientX = x;
   event._clientY = y;
   window.dispatchEvent(event);
 };
 
-sdl.onmousedown = function(x, y, shift) {
+sdl.onmousedown = function(x, y) {
   var event = new dom.MouseEvent;
   event._type = 'mousedown';
-  event._shiftKey = shift;
+  event._shiftKey = sdl.shiftKeyDown();
+  event._altKey = sdl.altKeyDown();
   event._clientX = x;
   event._clientY = y;
   window.dispatchEvent(event);
 };
 
-sdl.onmouseup = function(x, y, shift) {
+sdl.onmouseup = function(x, y) {
   var event = new dom.MouseEvent;
   event._type = 'mouseup';
-  event._shiftKey = shift;
+  event._shiftKey = sdl.shiftKeyDown();
+  event._altKey = sdl.altKeyDown();
   event._clientX = x;
   event._clientY = y;
   window.dispatchEvent(event);

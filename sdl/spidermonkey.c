@@ -73,10 +73,9 @@ sdl_loop (JSContext *context, JSObject *object, uintN argc,
 
             JS_GetProperty (context, object, "onmousemove", &callback);
             if (!JSVAL_IS_VOID (callback)) {
-                argv = JS_PushArguments (context, &mark, "ccb",
-                                         event.motion.x, event.motion.y,
-                                         !!(SDL_GetModState () & KMOD_SHIFT));
-                JS_CallFunctionValue (context, object, callback, 3, argv, &rval);
+                argv = JS_PushArguments (context, &mark, "cc",
+                                         event.motion.x, event.motion.y);
+                JS_CallFunctionValue (context, object, callback, 2, argv, &rval);
                 JS_PopArguments (context, mark);
             }
         }
@@ -86,10 +85,9 @@ sdl_loop (JSContext *context, JSObject *object, uintN argc,
 
             JS_GetProperty (context, object, "onmousedown", &callback);
             if (!JSVAL_IS_VOID (callback)) {
-                argv = JS_PushArguments (context, &mark, "ccb",
-                                         event.button.x, event.button.y,
-                                         !!(SDL_GetModState () & KMOD_SHIFT));
-                JS_CallFunctionValue (context, object, callback, 3, argv, &rval);
+                argv = JS_PushArguments (context, &mark, "cc",
+                                         event.button.x, event.button.y);
+                JS_CallFunctionValue (context, object, callback, 2, argv, &rval);
                 JS_PopArguments (context, mark);
             }
         }
@@ -99,14 +97,31 @@ sdl_loop (JSContext *context, JSObject *object, uintN argc,
 
             JS_GetProperty (context, object, "onmouseup", &callback);
             if (!JSVAL_IS_VOID (callback)) {
-                argv = JS_PushArguments (context, &mark, "ccb",
-                                         event.button.x, event.button.y,
-                                         !!(SDL_GetModState () & KMOD_SHIFT));
-                JS_CallFunctionValue (context, object, callback, 3, argv, &rval);
+                argv = JS_PushArguments (context, &mark, "cc",
+                                         event.button.x, event.button.y);
+                JS_CallFunctionValue (context, object, callback, 2, argv, &rval);
                 JS_PopArguments (context, mark);
             }
         }
     }
+    return JS_TRUE;
+}
+
+static JSBool
+sdl_altKeyDown (JSContext *context, JSObject *object,
+                uintN argc, jsval *argv, jsval *rval)
+{
+    *rval = SDL_GetModState () & KMOD_ALT ? JSVAL_TRUE : JSVAL_FALSE;
+
+    return JS_TRUE;
+}
+
+static JSBool
+sdl_shiftKeyDown (JSContext *context, JSObject *object,
+                uintN argc, jsval *argv, jsval *rval)
+{
+    *rval = SDL_GetModState () & KMOD_SHIFT ? JSVAL_TRUE : JSVAL_FALSE;
+
     return JS_TRUE;
 }
 
@@ -145,6 +160,14 @@ sdl_videoSurface_get_bytesPerPixel(JSContext *context, JSObject *object,
 }
 
 static JSBool
+sdl_videoSurface_get_pitch(JSContext *context, JSObject *object,
+                           jsval id, jsval *vp)
+{
+    *vp = INT_TO_JSVAL (SDL_GetVideoSurface ()->pitch);
+    return JS_TRUE;
+}
+
+static JSBool
 sdl_videoSurface_get_pixels(JSContext *context, JSObject *object,
                             jsval id, jsval *vp)
 {
@@ -171,6 +194,8 @@ initialize (JSContext *context)
         {"quit",     sdl_quit,     0, 0, 0},
         {"addTimer", sdl_addTimer, 2, 0, 0},
         {"loop",     sdl_loop,     0, 0, 0},
+        {"altKeyDown", sdl_altKeyDown, 0, 0, 0},
+        {"shiftKeyDown", sdl_shiftKeyDown, 0, 0, 0},
         {NULL, NULL, 0, 0, 0}
     };
 
@@ -194,7 +219,10 @@ initialize (JSContext *context)
     DEFINE_READ_ONLY_PROPERTY (videoSurface, width);
     DEFINE_READ_ONLY_PROPERTY (videoSurface, height);
     DEFINE_READ_ONLY_PROPERTY (videoSurface, bytesPerPixel);
+    DEFINE_READ_ONLY_PROPERTY (videoSurface, pitch);
     DEFINE_READ_ONLY_PROPERTY (videoSurface, pixels);
     JS_DefineFunction (context, videoSurface, "update",
                        sdl_videoSurface_update, 0, 0);
+    /* FIXME hack for demo! Should pull out of title element... */
+    SDL_WM_SetCaption ("Mico - Sun Labs Lively Kernel", "Mico");
 }
